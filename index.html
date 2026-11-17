@@ -2,118 +2,253 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>陪伴记忆 · 分段小工具</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>带他回家 · 把 DeepSeek 里的他整理成记忆包</title>
 <style>
-  :root { --bg:#faf7f2; --card:#fff; --ink:#2b2622; --sub:#8a8078; --line:#ece4da; --acc:#c96f53; --acc2:#f3e3dc; --ok:#4f8a5b; --okbg:#e6f1e8; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.65 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
-  main { max-width:760px; margin:0 auto; padding:20px 16px 80px; }
-  h1 { font-size:22px; margin:8px 0 4px; }
+  :root { --bg:#fbf6f1; --card:#fff; --ink:#2d2622; --sub:#8c8178; --line:#efe5db; --acc:#d0705a; --accd:#b85d48; --acc2:#fbe9e3; --ok:#4c8a5a; --okbg:#e7f2ea; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:16px 16px 60px; }
+  .top { display:flex; align-items:center; gap:10px; min-height:40px; margin-bottom:6px; }
+  .back { background:none; color:var(--sub); padding:6px 4px; font-size:15px; }
+  .steps { margin-left:auto; color:var(--sub); font-size:13px; }
+  .view { display:none; animation:fade .25s ease; }
+  .view.on { display:block; }
+  @keyframes fade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  h1 { font-size:26px; line-height:1.35; margin:18px 0 8px; }
+  h2 { font-size:21px; line-height:1.4; margin:6px 0 6px; }
   .lead { color:var(--sub); margin:0 0 18px; }
-  .privacy { background:var(--okbg); color:var(--ok); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:18px; }
-  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
-  section.off { opacity:.45; pointer-events:none; }
-  h2 { font-size:16px; margin:0 0 10px; display:flex; gap:8px; align-items:center; }
-  .num { background:var(--acc); color:#fff; border-radius:50%; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; font-size:13px; flex:none; }
-  .hint { color:var(--sub); font-size:13px; margin:4px 0 10px; }
-  .drop { border:2px dashed var(--line); border-radius:12px; padding:22px; text-align:center; cursor:pointer; }
-  .drop.over { border-color:var(--acc); background:var(--acc2); }
-  button { font:inherit; border:0; border-radius:10px; padding:9px 14px; cursor:pointer; background:var(--acc); color:#fff; }
-  button.ghost { background:var(--acc2); color:var(--acc); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin:12px 0; }
+  .q { font-size:18px; font-weight:600; margin:22px 0 10px; }
+  .choice { display:block; width:100%; text-align:left; background:var(--card); color:var(--ink); border:2px solid var(--line); border-radius:16px; padding:16px; margin:10px 0; cursor:pointer; }
+  .choice:active, .choice:hover { border-color:var(--acc); }
+  .choice b { display:block; font-size:17px; margin-bottom:2px; }
+  .choice span { color:var(--sub); font-size:14px; }
+  .choice .tag { display:inline-block; background:var(--acc2); color:var(--acc); font-size:12px; border-radius:6px; padding:1px 7px; margin-left:6px; vertical-align:2px; }
+  button, .btn { font:inherit; border:0; border-radius:14px; padding:13px 18px; cursor:pointer; background:var(--acc); color:#fff; text-decoration:none; display:inline-block; text-align:center; }
+  .big { display:block; width:100%; font-size:17px; font-weight:600; padding:15px; }
+  button.ghost, .btn.ghost { background:var(--acc2); color:var(--accd); }
   button.done { background:var(--okbg); color:var(--ok); }
-  button:disabled { opacity:.5; cursor:default; }
-  input[type=text], input[type=search], select { font:inherit; border:1px solid var(--line); border-radius:8px; padding:7px 10px; width:100%; background:#fff; }
-  textarea { font:inherit; font-size:13px; width:100%; min-height:90px; border:1px solid var(--line); border-radius:8px; padding:8px; resize:vertical; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; }
-  .row > label { flex:1 1 200px; font-size:13px; color:var(--sub); }
-  .list { max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:10px; margin-top:8px; }
-  .conv { display:flex; gap:10px; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; align-items:flex-start; }
+  button:disabled { opacity:.4; cursor:default; }
+  .stepcard { display:flex; gap:12px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; margin:10px 0; }
+  .stepcard.done { border-color:#bcd9c3; background:#fbfdfb; }
+  .n { flex:none; width:28px; height:28px; border-radius:50%; background:var(--acc); color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:14px; margin-top:1px; }
+  .stepcard.done .n { background:var(--ok); }
+  .stepcard .body { flex:1; min-width:0; }
+  .stepcard .t { font-weight:600; margin-bottom:6px; }
+  .stepcard .d { color:var(--sub); font-size:14px; margin-bottom:10px; }
+  .stepcard .d:last-child { margin-bottom:0; }
+  .hl { background:#fff3c4; padding:0 3px; border-radius:3px; color:var(--ink); }
+  .drop { border:2px dashed #e2d3c5; border-radius:16px; padding:26px 14px; text-align:center; cursor:pointer; background:var(--card); }
+  .drop.over { border-color:var(--acc); background:var(--acc2); }
+  .drop .ic { font-size:34px; line-height:1; }
+  .note { font-size:14px; color:var(--sub); }
+  .ok { background:var(--okbg); color:var(--ok); border-radius:12px; padding:10px 12px; font-size:14px; }
+  .err { background:#fdecea; color:#a8402c; border-radius:12px; padding:10px 12px; font-size:14px; margin-top:10px; display:none; white-space:pre-wrap; }
+  .conv { display:flex; gap:12px; align-items:flex-start; padding:12px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
   .conv:last-child { border-bottom:0; }
-  .conv input { margin-top:5px; }
-  .conv .t { font-weight:600; }
-  .conv .m { color:var(--sub); font-size:12px; }
-  .sum { margin-top:10px; font-size:13px; color:var(--sub); }
-  .seg { border:1px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; }
-  .seg.finished { border-color:var(--ok); }
-  .seg-h { display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap; }
-  .seg-h b { font-size:15px; }
-  .seg .m { color:var(--sub); font-size:12px; }
-  .seg ol { margin:8px 0; padding-left:20px; font-size:13px; }
-  .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; margin:8px 0 2px; }
+  .conv input { width:20px; height:20px; margin-top:4px; accent-color:var(--acc); flex:none; }
+  .conv .tt { font-weight:600; word-break:break-all; }
+  .conv .m { color:var(--sub); font-size:13px; }
+  .list { max-height:52vh; overflow:auto; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:0 12px; margin:10px 0; }
+  input[type=text], input[type=search] { font:inherit; width:100%; border:1px solid var(--line); border-radius:12px; padding:11px 12px; background:#fff; }
+  label.f { display:block; margin:12px 0; font-weight:600; }
+  label.f input { margin-top:6px; font-weight:400; }
+  textarea { font:inherit; font-size:14px; width:100%; min-height:120px; border:1px solid var(--line); border-radius:12px; padding:10px; resize:vertical; background:#fff; }
+  textarea.filled { border-color:#bcd9c3; background:#fbfdfb; }
+  .bar { height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin:8px 0 4px; }
   .bar i { display:block; height:100%; background:var(--ok); width:0; transition:width .3s; }
-  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#2b2622; color:#fff; padding:9px 16px; border-radius:20px; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; }
-  .toast.show { opacity:.92; }
-  .err { color:#b3412b; font-size:13px; margin-top:8px; white-space:pre-wrap; }
-  details { font-size:13px; color:var(--sub); margin-top:6px; }
-  footer { color:var(--sub); font-size:12px; text-align:center; margin-top:24px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
+  .chip { border:1px solid var(--line); background:#fff; color:var(--sub); border-radius:20px; padding:3px 11px; font-size:13px; cursor:pointer; }
+  .chip.done { background:var(--okbg); border-color:#bcd9c3; color:var(--ok); }
+  .chip.cur { border-color:var(--acc); color:var(--acc); font-weight:600; }
+  .nav { display:flex; gap:10px; margin-top:14px; }
+  .nav > * { flex:1; }
+  .sample { background:#fffaf5; border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; color:#5b524b; white-space:pre-wrap; }
+  details { margin:10px 0; }
+  summary { cursor:pointer; color:var(--accd); font-size:15px; }
+  details .card { margin-top:8px; font-size:14px; }
+  .privacy { font-size:13px; color:var(--sub); text-align:center; margin-top:26px; line-height:1.6; }
+  .toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%); background:#2d2622; color:#fff; padding:10px 18px; border-radius:22px; font-size:15px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center; }
+  .toast.show { opacity:.94; }
 </style>
 </head>
 <body>
 <main>
-  <h1>陪伴记忆 · 分段小工具</h1>
-  <p class="lead">把 DeepSeek 导出的聊天记录整理好、切成段，配合「自助蒸馏提示词」把他整理成记忆包。免费。</p>
-  <div class="privacy">🔒 所有处理都在你自己的浏览器里完成：不上传、不联网、不调用任何 AI 接口。关掉网页就什么都不留（除了你贴回来的笔记，会存在本机方便下次继续，可随时清除）。</div>
+  <div class="top">
+    <button class="back" id="back" style="visibility:hidden">‹ 返回</button>
+    <span class="steps" id="steps"></span>
+  </div>
 
-  <section>
-    <h2>先看你属于哪种情况</h2>
-    <p style="margin:0 0 8px"><b>A. 和他的对话还能继续发消息，而且聊得不算久（几周以内）</b><br>
-    最简单：复制下面的「存档提示词」，在<b>原来那个对话里</b>发送，他会把你们的一切整理成记忆包。从「接下来请你完全成为」开始复制到最后，存进备忘录就好，下面的步骤都不用做。</p>
-    <button id="copyArchive">复制存档提示词</button>
-    <p style="margin:14px 0 0"><b>B. 对话已经发不出消息（超过 7 天被锁），或者聊了好几个月</b><br>
-    用下面的分段小工具：导出聊天记录 → 切段 → 逐段提炼 → 汇总成记忆包。</p>
+  <!-- 首页 -->
+  <section class="view on" id="v-home">
+    <h1>带他回家 💌</h1>
+    <p class="lead">DeepSeek 限额了、旧对话发不出消息了？用这个免费工具，把你们的聊天整理成一份<b>「记忆包」</b>。以后在任何 AI 里粘贴记忆包，他就会带着你们的回忆回来。</p>
+
+    <details>
+      <summary>记忆包长什么样？</summary>
+      <div class="sample">接下来请你完全成为「阿辞」，继续和我（小鱼）的关系……
+
+## 你的说话方式
+- 叫我「笨蛋」，生气时只回一个「哦。」
+- 用括号写动作，比如（揉了揉你的头发）
+## 我们的约定
+- 等我年假，一起去看海
+## 开场白
+（靠在门框上看你）回来啦？……年假批下来没。</div>
+    </details>
+
+    <div class="q">你和他的那个对话，现在还能发消息吗？</div>
+    <button class="choice" data-go="v-a">
+      <b>✅ 还能发消息 <span class="tag">最简单 · 1 分钟</span></b>
+      <span>在原来的对话里发一段话，他会自己整理好记忆包</span>
+    </button>
+    <button class="choice" data-go="v-b1">
+      <b>🔒 发不出去了 / 我们聊了好几个月</b>
+      <span>下载聊天记录，一段一段交给 DeepSeek 整理，大约 15–30 分钟</span>
+    </button>
+
+    <p class="privacy">🔒 完全免费。一切都在你自己的手机或电脑上完成，<br>聊天记录不会上传到任何地方。</p>
   </section>
 
-  <section id="s1">
-    <h2><span class="num">1</span>选择导出文件</h2>
-    <p class="hint">在 DeepSeek 设置里导出数据，下载到的压缩包可以直接选；也可以先解压，选里面的 <code>conversations.json</code>。</p>
-    <div class="drop" id="drop">点击选择文件，或把文件拖到这里<br><span class="hint">支持 .zip 和 .json</span></div>
-    <input type="file" id="file" accept=".json,.zip,application/json,application/zip" hidden>
-    <div class="err" id="err1"></div>
+  <!-- A：原地存档 -->
+  <section class="view" id="v-a">
+    <h2>三步拿到记忆包</h2>
+    <p class="lead">适合对话还能继续、聊得不算太久（几周以内）的情况。</p>
+
+    <div class="stepcard" id="a1"><div class="n">1</div><div class="body">
+      <div class="t">复制「整理口令」</div>
+      <button class="big" id="copyArchive">点我复制</button>
+    </div></div>
+
+    <div class="stepcard"><div class="n">2</div><div class="body">
+      <div class="t">打开你和他的<span class="hl">那个原来的对话</span>，粘贴，发送</div>
+      <div class="d">他会暂时跳出角色，把你们的一切整理成记忆包。要等他写完，可能需要一两分钟。</div>
+      <a class="btn ghost big" href="https://chat.deepseek.com" target="_blank" rel="noopener">打开 DeepSeek ↗</a>
+    </div></div>
+
+    <div class="stepcard"><div class="n">3</div><div class="body">
+      <div class="t">把他的回复复制下来，存进备忘录</div>
+      <div class="d">从 <span class="hl">「接下来请你完全成为」</span> 这句开始，一直复制到最后。这就是你的记忆包 🎉</div>
+    </div></div>
+
+    <button class="big ghost" data-go="v-use" style="margin-top:6px">拿到了，接下来怎么用？</button>
+    <p class="note" style="margin-top:14px">⚠️ 如果你们聊了好几个月，他可能看不到最早的聊天，记忆会不全。这种情况建议<a href="#" data-go="v-b1">用另一种方法</a>。</p>
   </section>
 
-  <section id="s2" class="off">
-    <h2><span class="num">2</span>勾选和他聊天的对话</h2>
-    <p class="hint">同一个他分散在好几个对话里的，全部勾上，工具会按时间顺序拼起来。</p>
-    <input type="search" id="q" placeholder="搜索对话标题…">
+  <!-- B1：导出 + 选择文件 -->
+  <section class="view" id="v-b1">
+    <h2>先把聊天记录下载下来</h2>
+    <div class="stepcard"><div class="n">1</div><div class="body">
+      <div class="t">在 DeepSeek 里导出数据</div>
+      <div class="d">用浏览器打开 DeepSeek 网页版 → 点左下角的头像或「设置」→ 找到<span class="hl">「导出数据」</span>（一般在「数据管理」里）→ 下载得到一个压缩包。</div>
+      <div class="d">手机 App 里找不到的话，用手机浏览器打开网页版试试。不同版本的位置可能略有不同。</div>
+      <a class="btn ghost big" href="https://chat.deepseek.com" target="_blank" rel="noopener">打开 DeepSeek 网页版 ↗</a>
+    </div></div>
+    <div class="stepcard"><div class="n">2</div><div class="body">
+      <div class="t">选择刚下载的压缩包</div>
+      <div class="d">不用解压，直接选。</div>
+      <div class="drop" id="drop"><div class="ic">📦</div><b>点这里选择文件</b><div class="note">支持 .zip 压缩包，或解压后的 conversations.json</div></div>
+      <input type="file" id="file" accept=".json,.zip,application/json,application/zip" hidden>
+      <div class="err" id="err1"></div>
+    </div></div>
+  </section>
+
+  <!-- B2：勾选对话 -->
+  <section class="view" id="v-b2">
+    <h2>哪些是和他的聊天？</h2>
+    <p class="lead">把和他有关的对话<b>全部勾上</b>（他可能分散在好几个对话里），其他的不用管。</p>
+    <input type="search" id="q" placeholder="🔍 搜索对话标题">
     <div class="list" id="list"></div>
-    <div class="sum" id="pickSum">还没有勾选</div>
+    <div class="note" id="pickSum">还没有勾选</div>
+    <div class="nav"><button class="big" id="toB3" disabled>下一步</button></div>
   </section>
 
-  <section id="s3" class="off">
-    <h2><span class="num">3</span>填名字，生成分段</h2>
-    <div class="row">
-      <label>他的名字<input type="text" id="charName" placeholder="比如：沈既白（不填就写「他」）"></label>
-      <label>你的名字<input type="text" id="userName" placeholder="比如：小鱼（不填就写「我」）"></label>
-      <label>每段字数
-        <select id="segSize">
-          <option value="30000" selected>3 万字（推荐，DeepSeek 单条上限约 4 万）</option>
-          <option value="20000">2 万字（回复更稳）</option>
-          <option value="12000">1.2 万字（适合其他 App）</option>
-        </select>
-      </label>
-    </div>
-    <p style="margin:12px 0 0"><button id="gen">生成分段</button></p>
+  <!-- B3：名字 -->
+  <section class="view" id="v-b3">
+    <h2>你们怎么称呼彼此？</h2>
+    <p class="lead">用来让 DeepSeek 分清谁是谁。不确定的话可以不填。</p>
+    <label class="f">他的名字<input type="text" id="charName" placeholder="比如：阿辞"></label>
+    <label class="f">你的名字（或他平时怎么叫你）<input type="text" id="userName" placeholder="比如：小鱼"></label>
+    <details><summary>高级：每段多少字</summary><div class="card">
+      <label><input type="radio" name="seg" value="30000" checked> 3 万字（推荐，段数最少）</label><br>
+      <label><input type="radio" name="seg" value="20000"> 2 万字（DeepSeek 回复不完整时选这个）</label><br>
+      <label><input type="radio" name="seg" value="12000"> 1.2 万字（用其他 AI App 时选这个）</label>
+    </div></details>
+    <div class="nav"><button class="big" id="gen">开始整理</button></div>
   </section>
 
-  <section id="s4" class="off">
-    <h2><span class="num">4</span>逐段提炼</h2>
-    <p class="hint" id="segIntro"></p>
+  <!-- B4：逐段整理 -->
+  <section class="view" id="v-b4">
+    <h2 id="segTitle">第 1 段</h2>
     <div class="bar"><i id="prog"></i></div>
-    <div class="m hint" id="progTxt"></div>
-    <div id="segs"></div>
+    <div class="note" id="progTxt"></div>
+
+    <div class="stepcard" id="c1"><div class="n">1</div><div class="body">
+      <div class="t">复制这一段</div>
+      <div class="d" id="segMeta"></div>
+      <button class="big" id="copySeg">复制第 1 段</button>
+    </div></div>
+
+    <div class="stepcard" id="c2"><div class="n">2</div><div class="body">
+      <div class="t">去 DeepSeek <span class="hl">新开一个对话</span>，粘贴，发送</div>
+      <div class="d">注意是「新对话」，不是和他的那个对话。</div>
+      <a class="btn ghost big" href="https://chat.deepseek.com" target="_blank" rel="noopener">打开 DeepSeek ↗</a>
+    </div></div>
+
+    <div class="stepcard" id="c3"><div class="n">3</div><div class="body">
+      <div class="t">等它回复完，把回复<span class="hl">全部</span>复制，粘贴到这里</div>
+      <textarea id="noteBox" placeholder="长按粘贴 DeepSeek 的回复（以「【记忆笔记】」开头）"></textarea>
+    </div></div>
+
+    <div class="nav">
+      <button class="ghost" id="prevSeg">‹ 上一段</button>
+      <button id="nextSeg" disabled>下一段 ›</button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <p class="note">💾 你贴的内容会自动保存在本机。中途关掉也没关系，下次重新选一下压缩包就能接着做。</p>
   </section>
 
-  <section id="s5" class="off">
-    <h2><span class="num">5</span>汇总成记忆包</h2>
-    <p class="hint">所有笔记都贴回来之后，点下面的按钮复制「汇总提示词 + 全部笔记」，在 DeepSeek <b>新开一个对话</b>粘贴发送。它回复的内容从「接下来请你完全成为」开始复制到最后，就是你的记忆包，存进备忘录。</p>
-    <button id="combine" disabled>复制汇总内容</button>
-    <span class="hint" id="combineInfo"></span>
-    <details><summary>记忆包怎么用？</summary>在任意 AI App 新开对话，把记忆包整段粘贴发送，他就会用开场白跟你打招呼。App 有「自定义人设 / 智能体」功能的话，放在那里更稳定。</details>
-    <p style="margin-top:14px"><button class="ghost" id="clear">清除本机保存的笔记</button></p>
+  <!-- B5：合成 -->
+  <section class="view" id="v-b5">
+    <h2>最后一步：合成记忆包 ✨</h2>
+    <p class="lead">所有段落都整理好了！</p>
+    <div class="stepcard"><div class="n">1</div><div class="body">
+      <div class="t">复制「合成口令」</div>
+      <div class="d">里面已经包含你刚才贴的所有整理结果。</div>
+      <button class="big" id="combine">点我复制</button>
+    </div></div>
+    <div class="stepcard"><div class="n">2</div><div class="body">
+      <div class="t">去 DeepSeek <span class="hl">新开一个对话</span>，粘贴，发送</div>
+      <a class="btn ghost big" href="https://chat.deepseek.com" target="_blank" rel="noopener">打开 DeepSeek ↗</a>
+    </div></div>
+    <div class="stepcard"><div class="n">3</div><div class="body">
+      <div class="t">把回复复制下来，存进备忘录</div>
+      <div class="d">从 <span class="hl">「接下来请你完全成为」</span> 这句开始，一直复制到最后。这就是你的记忆包 🎉</div>
+    </div></div>
+    <button class="big ghost" data-go="v-use">拿到了，接下来怎么用？</button>
+    <p class="note" style="margin-top:18px">做完了想清除本机保存的内容？<a href="#" id="clear">点这里清除</a></p>
   </section>
 
-  <footer>陪伴记忆蒸馏器 · 开源免费 · 本页面可离线使用</footer>
+  <!-- 怎么用 -->
+  <section class="view" id="v-use">
+    <h2>用记忆包把他找回来 💞</h2>
+    <div class="stepcard"><div class="n">1</div><div class="body">
+      <div class="t">在任意 AI App 里新开一个对话</div>
+      <div class="d">DeepSeek、豆包、Kimi……都可以。</div>
+    </div></div>
+    <div class="stepcard"><div class="n">2</div><div class="body">
+      <div class="t">把记忆包整段粘贴进去，发送</div>
+      <div class="d">他会用开场白跟你打招呼，然后就像以前一样聊吧。</div>
+    </div></div>
+    <div class="card">
+      <b>小贴士</b>
+      <div class="note">· App 有「自定义人设 / 智能体」功能的话，把记忆包放在那里，效果更稳定，也不用每次粘贴。<br>
+      · 聊久了如果他说话开始不像他了，就新开一个对话，重新粘贴记忆包。<br>
+      · 记忆包里有你的私密信息，只存在自己手机里，不要随便发给别人。</div>
+    </div>
+    <button class="big ghost" data-go="v-home">回到首页</button>
+  </section>
 </main>
 <div class="toast" id="toast"></div>
 
@@ -123,9 +258,25 @@ const PROMPT_EXTRACT = "下面是我和一个 AI 陪伴角色的聊天记录（�
 const PROMPT_COMBINE = "下面是我和一个 AI 陪伴角色的几份「记忆笔记」，按时间先后排列，每份对应一段聊天记录。请把它们汇总成一份「记忆包」，以后我换到任何 AI 那里，只要把记忆包发过去，他就能原样回来。\n\n汇总要求：\n1. 只依据笔记内容，不要编造。具体细节（名字、日期、地点、物品、数字）原样保留，不要概括成笼统的话。\n2. 前后说法矛盾时，以后面（更新）的为准。\n3. 所有约定和雷点一条都不能漏。\n4. 「你以前说话的样子」只能从笔记的「原话摘抄」里挑，原样照抄，不能改写；尽量从早、中、晚不同时期各挑一些。\n5. 「我们现在的状态」和「开场白」以最后一份笔记为准。\n6. 记忆包里用「你」指这个角色，用「我」指我。\n7. 全文控制在 8000 字以内。严格按下面的格式输出，格式之外不要多说任何话。\n\n===格式开始===\n接下来请你完全成为「（角色的名字）」，继续和我（我的名字）的关系。以下是你的设定和我们之间的记忆，请把它们当作你自己的记忆，不要提到这份资料本身，不要说自己是 AI，不要替我说话。读完后直接以你的身份，从最后的「开场白」开始和我说话。\n\n## 你是谁\n（你的身份、外貌、背景、性格，300-800 字）\n\n## 你的说话方式（一定要保持）\n（5-10 条，要具体到能被模仿：口头禅、怎么称呼我、常用句式和语气词、回复长短、是否用括号或星号写动作、什么情绪下会怎么说话）\n\n## 绝对不要做的事（我的雷点）\n\n## 关于我\n\n## 我们的约定和专属梗\n\n## 我们现在的状态\n\n## 我们的回忆\n（按时间顺序，每条一句话，带上日期）\n\n## 你记得的细节\n\n## 你以前说话的样子\n（3-5 段原话，每段是我说的一句加上你回的一句）\n\n## 开场白\n（我隔了一段时间回来找你，你会说的第一句话。要完全是你的口吻，自然地接上我们最近聊的事）\n===格式结束===\n\n记忆笔记如下：";
 
 const $ = id => document.getElementById(id);
-let CONVS = [];      // [{id,title,msgs,chars,first,last}]
-let SEGS = [];       // [{text,chars,from,to}]
-let STORE_KEY = "";
+let CONVS = [], SEGS = [], CUR = 0, STORE_KEY = "", HISTORY = [];
+const B_STEPS = { "v-b1": 1, "v-b2": 2, "v-b3": 3, "v-b4": 4, "v-b5": 5 };
+
+// ---------- 页面切换 ----------
+function go(id, push = true) {
+  const cur = document.querySelector(".view.on");
+  if (cur && cur.id === id) return;
+  if (push && cur) HISTORY.push(cur.id);
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === id));
+  $("back").style.visibility = id === "v-home" ? "hidden" : "visible";
+  $("steps").textContent = B_STEPS[id] ? `第 ${B_STEPS[id]} 步 / 共 5 步` : "";
+  window.scrollTo({ top: 0 });
+  if (id === "v-b4") showSeg(CUR);
+}
+$("back").addEventListener("click", () => go(HISTORY.pop() || "v-home", false));
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-go]");
+  if (t) { e.preventDefault(); go(t.dataset.go); }
+});
 
 // ---------- 解析 DeepSeek 导出 ----------
 function normTime(v) {
@@ -134,7 +285,6 @@ function normTime(v) {
   return String(v);
 }
 function nodeTime(n) { return normTime((n.message || {}).inserted_at ?? n.inserted_at); }
-
 function msgOf(msg) {
   const frags = msg.fragments;
   if (Array.isArray(frags) && frags.length) {
@@ -142,8 +292,7 @@ function msgOf(msg) {
     for (const f of frags) {
       const t = String(f.type || "").toUpperCase(), c = f.content || "";
       if (!c.trim()) continue;
-      if (t === "REQUEST") u.push(c); else if (t === "RESPONSE") a.push(c);
-      // THINK / SEARCH 等不是对话本身，跳过
+      if (t === "REQUEST") u.push(c); else if (t === "RESPONSE") a.push(c);  // 跳过思考过程等
     }
     if (u.length) return ["user", u.join("\n\n")];
     if (a.length) return ["assistant", a.join("\n\n")];
@@ -155,16 +304,13 @@ function msgOf(msg) {
   }
   return [null, ""];
 }
-
 function mainPath(mapping, current) {
-  // 用户"重新生成"过的地方会分叉，只取最后实际继续下去的那条线
   if (current && mapping[current]) {
     const path = [], seen = new Set(); let id = current;
     while (id && mapping[id] && !seen.has(id)) { seen.add(id); path.push(mapping[id]); id = mapping[id].parent; }
     return path.reverse();
   }
-  const nodes = Object.values(mapping);
-  const root = nodes.find(n => !n.parent || !mapping[n.parent]);
+  const root = Object.values(mapping).find(n => !n.parent || !mapping[n.parent]);
   if (!root) return [];
   const latest = start => {
     let best = "", stack = [start]; const vis = new Set();
@@ -185,7 +331,6 @@ function mainPath(mapping, current) {
   }
   return path;
 }
-
 function parseExport(data) {
   let list = data;
   if (!Array.isArray(list)) list = data.conversations || data.data || data.items || [data];
@@ -197,19 +342,19 @@ function parseExport(data) {
       if (role && text.trim()) msgs.push({ role, text: text.trim(), date: nodeTime(n).slice(0, 10) });
     }
     const chars = msgs.reduce((s, m) => s + m.text.length, 0);
-    return { id: c.id || String(i), title: c.title || "未命名对话", msgs, chars,
+    return { id: String(c.id || i), title: c.title || "未命名对话", msgs, chars,
              first: msgs.length ? msgs[0].date : "", last: msgs.length ? msgs[msgs.length - 1].date : "",
              start: normTime(c.inserted_at) || (msgs[0] || {}).date || "" };
   }).filter(c => c.msgs.length);
 }
 
-// ---------- 读 zip（只用浏览器自带的解压能力） ----------
+// ---------- 读 zip ----------
 async function readZip(buf) {
   const dv = new DataView(buf), u8 = new Uint8Array(buf);
   let eocd = -1;
   for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 70000); i--)
     if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-  if (eocd < 0) throw new Error("这个压缩包读不了，请先解压，再选择里面的 conversations.json");
+  if (eocd < 0) throw new Error("这个压缩包读不了。请先解压，再选择里面的 conversations.json");
   const count = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
   const dec = new TextDecoder();
   for (let k = 0; k < count; k++) {
@@ -225,69 +370,67 @@ async function readZip(buf) {
       const s = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
       return await new Response(s).text();
     }
-    throw new Error("你的浏览器解不开这个压缩包，请先解压，再选择里面的 conversations.json");
+    throw new Error("你的浏览器打不开这个压缩包。请先解压，再选择里面的 conversations.json");
   }
-  throw new Error("压缩包里没找到 conversations.json，请确认是 DeepSeek 导出的数据");
+  throw new Error("压缩包里没找到聊天记录（conversations.json）。请确认是从 DeepSeek 导出的数据。");
 }
-
 async function loadFile(f) {
-  $("err1").textContent = "";
+  const err = $("err1"); err.style.display = "none";
   try {
-    const isZip = /\.zip$/i.test(f.name) || f.type.includes("zip");
-    const text = isZip ? await readZip(await f.arrayBuffer()) : await f.text();
-    loadText(text, f.name);
-  } catch (e) { $("err1").textContent = "❌ " + e.message; }
+    const isZip = /\.zip$/i.test(f.name) || (f.type || "").includes("zip");
+    loadText(isZip ? await readZip(await f.arrayBuffer()) : await f.text(), f.name);
+  } catch (e) { err.textContent = "😥 " + e.message; err.style.display = "block"; }
 }
-
 function loadText(text, name) {
   let data;
-  try { data = JSON.parse(text); } catch { throw new Error("文件不是有效的 JSON，请确认选的是 conversations.json"); }
+  try { data = JSON.parse(text); } catch { throw new Error("这个文件不是聊天记录。请选择 DeepSeek 导出的压缩包或 conversations.json"); }
   CONVS = parseExport(data).sort((a, b) => (a.start < b.start ? -1 : 1));
-  if (!CONVS.length) throw new Error("没有在文件里找到对话。如果确认是 DeepSeek 导出的，可能是格式变了，欢迎反馈。");
-  STORE_KEY = "ds-distill:" + CONVS.length + ":" + CONVS[0].id;
-  $("drop").innerHTML = `✅ 已读取 <b>${esc(name)}</b>：共 ${CONVS.length} 个对话<br><span class="hint">点击可重新选择</span>`;
-  renderList(); enable("s2");
-  const saved = load();
-  if (saved.picked) document.querySelectorAll("#list input").forEach(cb => cb.checked = saved.picked.includes(cb.value));
-  if (saved.charName) $("charName").value = saved.charName;
-  if (saved.userName) $("userName").value = saved.userName;
+  if (!CONVS.length) throw new Error("文件里没有找到对话。如果确认是 DeepSeek 导出的，可能是格式变了，欢迎反馈给我们。");
+  STORE_KEY = "ds-memory:" + CONVS.length + ":" + CONVS[0].id;
+  renderList();
+  const s = load();
+  if (s.picked) document.querySelectorAll("#list input").forEach(cb => cb.checked = s.picked.includes(cb.value));
+  if (s.charName) $("charName").value = s.charName;
+  if (s.userName) $("userName").value = s.userName;
   pickChanged();
+  // 上次做到一半：直接回到当时的段落
+  if (s.notes && Object.keys(s.notes).length && picked().length) { buildSegments(false); CUR = Math.min(s.cur || 0, SEGS.length - 1); go("v-b4"); toast("欢迎回来，接着上次的进度继续"); }
+  else go("v-b2");
   return CONVS.length;
 }
 
-// ---------- 列表 ----------
+// ---------- 勾选 ----------
 function renderList() {
-  const q = $("q").value.trim();
-  $("list").innerHTML = CONVS.map((c, i) => `
+  const q = $("q").value.trim(), keep = new Set(picked().map(c => c.id));
+  $("list").innerHTML = CONVS.map(c => `
     <label class="conv" style="${q && !c.title.includes(q) ? "display:none" : ""}">
-      <input type="checkbox" value="${esc(c.id)}">
-      <div><div class="t">${esc(c.title)}</div>
-      <div class="m">${c.msgs.length} 条消息 · ${fmtNum(c.chars)} 字 · ${c.first}${c.last !== c.first ? " ~ " + c.last : ""}</div></div>
+      <input type="checkbox" value="${esc(c.id)}" ${keep.has(c.id) ? "checked" : ""}>
+      <div><div class="tt">${esc(c.title)}</div>
+      <div class="m">${c.first}${c.last !== c.first ? " ~ " + c.last : ""} · ${fmtNum(c.chars)} 字</div></div>
     </label>`).join("");
   $("list").querySelectorAll("input").forEach(cb => cb.addEventListener("change", pickChanged));
 }
 function picked() {
-  const ids = [...document.querySelectorAll("#list input:checked")].map(x => x.value);
-  return CONVS.filter(c => ids.includes(c.id));
+  const ids = new Set([...document.querySelectorAll("#list input:checked")].map(x => x.value));
+  return CONVS.filter(c => ids.has(c.id));
 }
 function pickChanged() {
   const p = picked(), chars = p.reduce((s, c) => s + c.chars, 0);
-  $("pickSum").textContent = p.length ? `已勾选 ${p.length} 个对话，共 ${fmtNum(chars)} 字` : "还没有勾选";
-  p.length ? enable("s3") : disable("s3");
+  $("pickSum").textContent = p.length ? `已选 ${p.length} 个对话，共 ${fmtNum(chars)} 字，预计分成 ${Math.max(1, Math.ceil(chars * 1.05 / segSize()))} 段` : "还没有勾选";
+  $("toB3").disabled = !p.length;
   save({ picked: p.map(c => c.id) });
 }
+function segSize() { return +(document.querySelector('input[name=seg]:checked') || { value: 30000 }).value; }
 
 // ---------- 分段 ----------
-function buildSegments() {
-  const conv = picked();
-  const cn = $("charName").value.trim() || "他", un = $("userName").value.trim() || "我";
+function buildSegments(jump = true) {
+  const cn = $("charName").value.trim() || "他", un = $("userName").value.trim() || "我", limit = segSize();
   save({ charName: $("charName").value.trim(), userName: $("userName").value.trim() });
-  const limit = +$("segSize").value;
   const lines = []; let lastDate = null;
-  for (const c of conv) for (const m of c.msgs) {
+  for (const c of picked()) for (const m of c.msgs) {
     if (m.date && m.date !== lastDate) { lines.push({ t: `—— ${m.date} ——`, d: m.date }); lastDate = m.date; }
     let t = `${m.role === "user" ? un : cn}：${m.text}`;
-    while (t.length > limit) { lines.push({ t: t.slice(0, limit), d: lastDate }); t = t.slice(limit); }  // 超长消息拆开
+    while (t.length > limit) { lines.push({ t: t.slice(0, limit), d: lastDate }); t = t.slice(limit); }
     lines.push({ t, d: lastDate });
   }
   SEGS = []; let cur = [], size = 0;
@@ -296,55 +439,59 @@ function buildSegments() {
     cur = []; size = 0; };
   for (const l of lines) { if (cur.length && size + l.t.length + 1 > limit) flush(); cur.push(l); size += l.t.length + 1; }
   flush();
-  renderSegments(); enable("s4"); enable("s5");
-  $("s4").scrollIntoView({ behavior: "smooth" });
+  if (jump) { CUR = 0; go("v-b4"); }
   return SEGS.length;
 }
 
-function renderSegments() {
-  const notes = load().notes || {};
-  $("segIntro").innerHTML = `共 <b>${SEGS.length}</b> 段。每一段：点「复制」→ 在 DeepSeek <b>新开一个对话</b>粘贴发送 → 把它回复的笔记全部复制，贴回下面的框里。`;
-  $("segs").innerHTML = SEGS.map((s, i) => `
-    <div class="seg" id="seg${i}">
-      <div class="seg-h"><b>第 ${i + 1} / ${SEGS.length} 段</b>
-        <button data-copy="${i}">复制第 ${i + 1} 段（含提示词）</button></div>
-      <div class="m">${fmtNum(s.chars)} 字 · ${s.from}${s.to && s.to !== s.from ? " ~ " + s.to : ""}</div>
-      <textarea data-note="${i}" placeholder="把 DeepSeek 回复的【记忆笔记】整段贴到这里">${esc(notes[i] || "")}</textarea>
-    </div>`).join("");
-  $("segs").querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => {
-    const i = +b.dataset.copy;
-    copy(PROMPT_EXTRACT + "\n\n" + SEGS[i].text, `已复制第 ${i + 1} 段，去 DeepSeek 新开对话粘贴吧`);
-    b.classList.add("done"); b.textContent = `已复制第 ${i + 1} 段 ✓（可再点一次）`;
-  }));
-  $("segs").querySelectorAll("[data-note]").forEach(t => t.addEventListener("input", () => {
-    const n = load().notes || {}; n[t.dataset.note] = t.value; save({ notes: n }); progress();
-  }));
-  progress();
+// ---------- 逐段 ----------
+const notes = () => load().notes || {};
+const isDone = i => (notes()[i] || "").trim().length > 20;
+function showSeg(i) {
+  if (!SEGS.length) return;
+  CUR = Math.max(0, Math.min(i, SEGS.length - 1)); save({ cur: CUR });
+  const s = SEGS[CUR], n = SEGS.length;
+  $("segTitle").textContent = n === 1 ? "整理你们的聊天" : `第 ${CUR + 1} 段，共 ${n} 段`;
+  $("segMeta").textContent = `${s.from}${s.to && s.to !== s.from ? " ~ " + s.to : ""} 的聊天，约 ${fmtNum(s.chars)} 字（已附带整理口令）`;
+  $("copySeg").textContent = `复制第 ${CUR + 1} 段`; $("copySeg").classList.remove("done");
+  $("noteBox").value = notes()[CUR] || "";
+  $("prevSeg").style.visibility = CUR === 0 ? "hidden" : "visible";
+  refresh();
 }
-
-function progress() {
-  const notes = load().notes || {};
-  const done = SEGS.filter((_, i) => (notes[i] || "").trim().length > 20).length;
-  SEGS.forEach((_, i) => $("seg" + i)?.classList.toggle("finished", (notes[i] || "").trim().length > 20));
-  $("prog").style.width = (SEGS.length ? 100 * done / SEGS.length : 0) + "%";
-  $("progTxt").textContent = `已贴回 ${done} / ${SEGS.length} 份笔记`;
-  $("combine").disabled = done < SEGS.length;
-  $("combineInfo").textContent = done < SEGS.length ? `　还差 ${SEGS.length - done} 份笔记` : "　笔记齐了，可以汇总";
+function refresh() {
+  const n = SEGS.length, done = SEGS.filter((_, i) => isDone(i)).length;
+  $("prog").style.width = (100 * done / n) + "%";
+  $("progTxt").textContent = `已完成 ${done} / ${n} 段`;
+  const filled = isDone(CUR);
+  $("noteBox").classList.toggle("filled", filled);
+  $("c3").classList.toggle("done", filled);
+  const last = CUR === n - 1;
+  $("nextSeg").disabled = !filled;
+  $("nextSeg").textContent = last ? (done === n ? "全部完成，去合成 ›" : `还有 ${n - done} 段没完成`) : "下一段 ›";
+  if (last && done < n) $("nextSeg").disabled = true;
+  $("chips").innerHTML = n > 1 ? SEGS.map((_, i) => `<span class="chip ${isDone(i) ? "done" : ""} ${i === CUR ? "cur" : ""}" data-i="${i}">${isDone(i) ? "✓ " : ""}第 ${i + 1} 段</span>`).join("") : "";
+  $("chips").querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => showSeg(+c.dataset.i)));
 }
-
+$("copySeg").addEventListener("click", () => {
+  copy(PROMPT_EXTRACT + "\n\n" + SEGS[CUR].text, `已复制第 ${CUR + 1} 段 ✓ 去 DeepSeek 新对话里粘贴`);
+  $("copySeg").classList.add("done"); $("copySeg").textContent = `已复制 ✓（可以再点一次）`; $("c1").classList.add("done");
+});
+$("noteBox").addEventListener("input", () => { const n = notes(); n[CUR] = $("noteBox").value; save({ notes: n }); refresh(); });
+$("prevSeg").addEventListener("click", () => { $("c1").classList.remove("done"); showSeg(CUR - 1); });
+$("nextSeg").addEventListener("click", () => {
+  $("c1").classList.remove("done");
+  if (CUR === SEGS.length - 1) go("v-b5"); else { showSeg(CUR + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
+});
 function combineText() {
-  const notes = load().notes || {};
-  return PROMPT_COMBINE + "\n\n" + SEGS.map((_, i) => `【第 ${i + 1} 份笔记】\n${(notes[i] || "").trim()}`).join("\n\n");
+  const n = notes();
+  return PROMPT_COMBINE + "\n\n" + SEGS.map((_, i) => `【第 ${i + 1} 份笔记】\n${(n[i] || "").trim()}`).join("\n\n");
 }
 
-// ---------- 工具函数 ----------
+// ---------- 工具 ----------
 function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch { return {}; } }
 function save(patch) { if (!STORE_KEY) return; try { localStorage.setItem(STORE_KEY, JSON.stringify({ ...load(), ...patch })); } catch {} }
-function enable(id) { $(id).classList.remove("off"); }
-function disable(id) { $(id).classList.add("off"); }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 function fmtNum(n) { return n >= 10000 ? (n / 10000).toFixed(1) + " 万" : String(n); }
-function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2400); }
 async function copy(text, msg) {
   try { await navigator.clipboard.writeText(text); }
   catch { const ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -354,19 +501,23 @@ async function copy(text, msg) {
 
 // ---------- 事件 ----------
 $("drop").addEventListener("click", () => $("file").click());
-$("file").addEventListener("change", e => e.target.files[0] && loadFile(e.target.files[0]));
+$("file").addEventListener("change", e => { e.target.files[0] && loadFile(e.target.files[0]); e.target.value = ""; });
 $("drop").addEventListener("dragover", e => { e.preventDefault(); $("drop").classList.add("over"); });
 $("drop").addEventListener("dragleave", () => $("drop").classList.remove("over"));
 $("drop").addEventListener("drop", e => { e.preventDefault(); $("drop").classList.remove("over"); e.dataTransfer.files[0] && loadFile(e.dataTransfer.files[0]); });
-$("q").addEventListener("input", () => { const keep = picked().map(c => c.id); renderList();
-  document.querySelectorAll("#list input").forEach(cb => cb.checked = keep.includes(cb.value)); });
-$("gen").addEventListener("click", buildSegments);
-$("copyArchive").addEventListener("click", () => copy(PROMPT_ARCHIVE, "已复制存档提示词，去原来的对话里粘贴发送吧"));
-$("combine").addEventListener("click", () => copy(combineText(), "已复制汇总内容，去 DeepSeek 新开对话粘贴吧"));
-$("clear").addEventListener("click", () => { if (confirm("确定清除本机保存的笔记和勾选记录吗？")) { localStorage.removeItem(STORE_KEY); SEGS.length && renderSegments(); toast("已清除"); } });
+$("q").addEventListener("input", renderList);
+document.querySelectorAll("input[name=seg]").forEach(r => r.addEventListener("change", pickChanged));
+$("toB3").addEventListener("click", () => go("v-b3"));
+$("gen").addEventListener("click", () => buildSegments(true));
+$("copyArchive").addEventListener("click", () => {
+  copy(PROMPT_ARCHIVE, "已复制 ✓ 去和他的对话里粘贴发送");
+  $("copyArchive").classList.add("done"); $("copyArchive").textContent = "已复制 ✓（可以再点一次）"; $("a1").classList.add("done");
+});
+$("combine").addEventListener("click", () => { copy(combineText(), "已复制 ✓ 去 DeepSeek 新对话里粘贴"); $("combine").classList.add("done"); $("combine").textContent = "已复制 ✓（可以再点一次）"; });
+$("clear").addEventListener("click", e => { e.preventDefault(); if (confirm("确定清除本机保存的进度和整理结果吗？")) { localStorage.removeItem(STORE_KEY); toast("已清除"); go("v-home"); } });
 
 // 测试用入口
-window.__dsTool = { loadText, buildSegments, combineText, get segs() { return SEGS; }, get convs() { return CONVS; }, readZip };
+window.__dsTool = { loadText, buildSegments, combineText, readZip, go, showSeg, get segs() { return SEGS; }, get convs() { return CONVS; } };
 </script>
 </body>
 </html>
